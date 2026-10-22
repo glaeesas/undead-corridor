@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Undead Corridor</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  #unity-canvas{width:100%;height:100%;display:block}
+  #loadingBlock{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;background:#111;color:#fff;
+    font-family:Arial,Helvetica,sans-serif}
+  #bar{width:280px;height:6px;background:#333;border-radius:3px;overflow:hidden;margin-top:14px}
+  #fill{width:0;height:100%;background:#fdfe03;transition:width .2s}
+  #info{margin-top:8px;font-size:12px;opacity:.6}
+</style>
+</head>
+<body>
+<div id="unity-container" style="display:none"><canvas id="unity-canvas"></canvas></div>
+<div id="loadingBlock">
+  <div style="font-size:20px;font-weight:700">Undead Corridor</div>
+  <div id="bar"><div id="fill"></div></div>
+  <div id="info">Game Loading...</div>
+</div>
+
+<script>
+  var buildUrl = "Build";
+  var loaderUrl = buildUrl + "/undead-corridor-v26041701.loader.js";
+  var config = {
+    dataUrl: buildUrl + "/undead-corridor-v26041701.data.unityweb",
+    frameworkUrl: buildUrl + "/undead-corridor-v26041701.framework.js.unityweb",
+    codeUrl: buildUrl + "/undead-corridor-v26041701.wasm.unityweb",
+    streamingAssetsUrl: "StreamingAssets",
+    companyName: "azgames.io",
+    productName: "Undead Corridor",
+    productVersion: "26041701"
+  };
+  var canvas = document.getElementById("unity-canvas");
+  var fill = document.getElementById("fill");
+  var info = document.getElementById("info");
+  var block = document.getElementById("loadingBlock");
+
+  var s = document.createElement("script");
+  s.src = loaderUrl;
+  s.onload = function () {
+    createUnityInstance(canvas, config, function (p) {
+      fill.style.width = Math.round(p * 100) + "%";
+      info.innerText = "Downloading " + Math.round(p * 100) + "%";
+    }).then(function (inst) {
+      window.unityInstance = inst;
+      setTimeout(function () { block.style.display = "none"; window.focus(); }, 800);
+      document.getElementById("unity-container").style.display = "block";
+    }).catch(function (m) { info.innerText = "Error: " + m; });
+  };
+  document.body.appendChild(s);
+</script>
+</body>
+</html>
