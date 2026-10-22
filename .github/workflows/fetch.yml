@@ -1,0 +1,41 @@
+name: Fetch game build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Unity build
+        run: |
+          set -e
+          BASE="https://games.azgame.io/game/undead-corridor/26041701/Build"
+          mkdir -p Build
+          for f in \
+            undead-corridor-v26041701.loader.js \
+            undead-corridor-v26041701.data.unityweb \
+            undead-corridor-v26041701.framework.js.unityweb \
+            undead-corridor-v26041701.wasm.unityweb
+          do
+            echo "Fetching $f"
+            curl -fL --retry 3 -e "https://gamea.azgame.io/undead-corridor/" "$BASE/$f" -o "Build/$f"
+          done
+          echo "--- downloaded ---"
+          ls -lh Build
+
+      - name: Commit files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Build
+          if git diff --staged --quiet; then
+            echo "Nothing new to commit"
+          else
+            git commit -m "Add Undead Corridor build files"
+            git push
+          fi
