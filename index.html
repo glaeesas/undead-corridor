@@ -24,11 +24,55 @@
 </div>
 
 <script>
-  // This is the exact token the original game sets — without it the game stays locked
+  // 1. Signed token the outer SDK wants
   try {
     localStorage.setItem("gmsdksigndomain", "eyJzaWduZWQiOiJJaHQ2XC9qdTRUWk15dTljNUhNbWNmekM2QWFmdXFIbGlqOFNcL1ZNNGJxOFVERXZ2czBwc3gwZUZQNEdWSkVWNmVFU2FMaGV1UERNMnEwOVVhUFRLODFJbVpVYnBpTndMXC9wNENcL2R2RWRkanlQK1RyUFFqazNLOUxOM0ZNRDluN0hSXC9ZblAxRmJYTkxoOG0zY3ZLT1JjaWdyXC9Na1JJQnV4SndQaWlvTlFMTVVPbkIzUmZUUkV1czBXbThJK3l4WEdzWUttSVhrT1lGT2hMXC8xb29NNG1hYWswMHZCaFwvZ2J1T09DRDBmZE82K2k3WVFuQUpvQUlBVTNtVXZUc0g4bWN3XC9qUmtTc3E5a2hWdktWVStnem4rZndveVpKWDFWTE00alwvUzZWdVF5SGJoSWEzM0d6U2hjUDZYQXpUUTBIOWpsc2pzNU83aEx4alVkUlcrSDFsZW9RPT0iLCJhcCI6InllcyIsImhuIjoiZ2FtZWEuYXpnYW1lLmlvIiwiZG9tYWluIjoiYXpnYW1lLmlvIiwicyI6InllcyIsInN0eXBlIjoyfQ==");
   } catch(e){}
 
+  // 2. Aggressive domain spoof (this is the important part)
+  (function() {
+    try {
+      const fakeHost = "gamea.azgame.io";
+      const fakeHref = "https://gamea.azgame.io/undead-corridor/";
+
+      // Override location properties that Unity often reads
+      Object.defineProperty(window, "location", {
+        get: function() {
+          return {
+            hostname: fakeHost,
+            host: fakeHost,
+            href: fakeHref,
+            origin: "https://gamea.azgame.io",
+            protocol: "https:",
+            pathname: "/undead-corridor/",
+            search: "",
+            hash: "",
+            toString: () => fakeHref
+          };
+        },
+        configurable: true
+      });
+
+      // Also protect document.location and top
+      Object.defineProperty(document, "location", {
+        get: function() { return window.location; },
+        configurable: true
+      });
+
+      if (window.top === window) {
+        try {
+          Object.defineProperty(window, "top", {
+            get: function() { return window; },
+            configurable: true
+          });
+        } catch(e){}
+      }
+    } catch(e) {
+      console.warn("Spoof failed", e);
+    }
+  })();
+
+  // 3. Normal Unity loader
   var buildUrl = "Build";
   var loaderUrl = buildUrl + "/undead-corridor-v26041701.loader.js";
   var config = {
